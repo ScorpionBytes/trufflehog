@@ -3,6 +3,7 @@ package zenserp
 import (
 	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"regexp"
 	"time"
@@ -53,6 +54,15 @@ func (s Scanner) FromData(ctx context.Context, verify bool, data []byte) (result
 			res, err := client.Do(req)
 			if err == nil {
 				defer res.Body.Close()
+
+				bodyBytes, err := io.ReadAll(res.Body)
+				if err != nil {
+					continue
+				}
+
+				if bytes.Contains(bodyBytes, []byte("query")) {
+					s1.Verified = true
+				}
 
 				if detectors.IsKnownFalsePositive(resMatch, detectors.DefaultFalsePositives, true) {
 					continue
